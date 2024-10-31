@@ -1,0 +1,38 @@
+version: "3.9"
+
+x-common-settings: &common_settings
+  privileged: true
+  logging:
+    options:
+      max-size: "2048m"
+      
+services:
+  ai-box:
+    <<: *common_settings
+    image: ai-box-env
+    command: tail -F anything
+    volumes:
+      - ./:/env
+      - /usr:/usr
+      - /lib:/lib
+      - /dsp:/dsp
+      - /system:/system
+      - /vendor:/vendor
+      - /dev:/dev
+      - /etc:/etc
+      - /lib64:/lib64
+      - /mnt:/mnt
+      - /opt:/opt
+      - /proc:/proc
+      - /run:/run
+      - /sbin:/sbin
+      - /sys:/sys
+      - /target:/target
+      - /var:/var
+      - /tmp/.X11-unix/:/tmp/.X11-unix
+    devices:
+      - /dev:/dev
+    environment:
+      - DISPLAY
+    network_mode: host
+    tty: true

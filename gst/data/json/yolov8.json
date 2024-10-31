@@ -1,0 +1,17 @@
+{
+    "assets_dir": "../data/models/",
+    "yolov8" : {
+    	"framework": "ONNX",
+        "onnx_file": "yolov8/yolov8_9cls.onnx",
+        "label_file": "yolov8/.txt",
+        "precision": "fp16",
+        "device_index": 0,
+        "opt_profile": {
+            "min": [1, 320, 320],
+            "max": [1, 640, 640],
+            "opt": [1, 640, 640]
+        },
+        "confidence_threshold": 0.4,
+        "nms_threshold": 0.3
+    }
+}

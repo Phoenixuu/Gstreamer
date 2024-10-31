@@ -1,0 +1,42 @@
+1. Decoder  
+2. encode -> sink: rtmp, màn hình: wayland, ximage(dev máy)
+
+
+Constructor: GstDecoder(std::string strUrl): thiết lập class để đưa vào luồng. Trong đó có:
+	* mstrUrl: lưu luồng url video
+	* gst_init: khởi tạo thư viện Gstreamerr
+	* pthread_mutex_init: Khởi tạo mutex cho hoạt động luồng
+	* makePipeline: Thiết lập quy trình pipeline
+	* pthread_create: Tạo 2 luồng, 1 cho messing, 1 cho streaming
+Decoder: ~GstDecode(): Dọn nguồn Gstreamer, dừng luồng 
+	* gst_element_set_state: dừng luồng Gstreamer
+	* pthread_cancel: dừng luồng
+	* Làm trống hàng đợi m_quFrame
+
+Public methods:
+std::string getUrl() override: trả về url của video stream
+void getFrame(cv::Mat& mFrame) override: lấy frame từ hàng đợi
+void RunStream(): m_bRun = false -> pause  | m_bRun = true -> resumes
+void join(): both threads m_pthreadBus & m_pthread hoàn thành
+void setOverlay: adding overlays to frames
+
+
+Public Member Variables
+GstElement* m_gstPipeline: Lưu trữ pipeline của gstreamer
+GstAppSink* m_gstAppSink: Truy suất các frame đc giải mã
+GstBuffer* m_gstBuffer; Giữ data frame ở Gstreamer buffer
+GstMapInfo m_gstMapInfo: quản lý thông tin map ở Gstreamer buffer
+GstBus* m_gstBus: Quản lý tin nhắn từ luồng Gstreamer
+
+
+Private helper functions:
+std::string getCodecStr(std::string strUrl): using openCV to open URL
+std::string genPileline(std::string strUrl): gen luồng Gstream dựa trên loại URL, rtmp, rtsp
+void makePipeline(): Tạo luồng 
+
+
+Private Methods and Thread Functions
+bool gstBusProcessMsg(GstMessage *gstMsg): Xử lý tin nhắn từ bus, xử lý lỗi, thay đổi trạng thái và tin nhắn luồng.
+static void* gstBusFunc(void* arg) and void runBusThread(): khởi động và xử lý hông báo. Có thể gọi cho từng tin nhắn lỗi ghi nhật ký và xử lý.
+static void* gstStreamFunc(void* arg); and void runStreamThread(): Truy xuat và xử lý các khung từ đường dẫn, chuyển dữ liệu thô tình khung tương thích với openCv, thêm khung vào hàng đợi để xử lý và hiển thị
+
