@@ -59,6 +59,8 @@ class GstDecode : public Stream
         static void* gstStreamFunc(void* arg);
         void runStreamThread();
 
+        static void* gstGetFrameFunc(void* arg);
+
     private:
         std::string m_strUrl;
         int m_iFrameWidth;
@@ -66,6 +68,7 @@ class GstDecode : public Stream
 
         pthread_t m_pthread;
         pthread_t m_pthreadBus;
+        pthread_t m_pthreadGetFrame;
         pthread_mutex_t m_mtLock;
 
         bool m_bEnable = false;

@@ -22,6 +22,9 @@ GstDecode::GstDecode(std::string strUrl)
     pthread_create(&m_pthread, NULL, gstStreamFunc, this);
     pthread_detach(m_pthread);
 
+    pthread_create(&m_pthreadGetFrame, NULL, gstGetFrameFunc, this);
+    pthread_detach(m_pthreadGetFrame);
+
     m_bEnable = true;
     m_bRun = true;
 }
@@ -37,6 +40,8 @@ GstDecode::~GstDecode()
 
     pthread_cancel(m_pthreadBus);
     pthread_cancel(m_pthread);
+    pthread_cancel(m_pthreadGetFrame);
+
 
     while (m_quFrame.getSize() > 0)
     {
@@ -62,7 +67,12 @@ int GstDecode::getHeight()
 
 void GstDecode::getFrame(cv::Mat& mFrame)
 {
-    m_quFrame.tryWaitAndPop(mFrame, 50);
+    pthread_mutex_lock(&m_mtLock);
+    if(!m_quFrame.empty()){
+        mFrame = m_quFrame.front();
+        m_quFrame.pop();
+    }
+    pthread_mutex_unlock(&m_mtLock);
 }
 
 void GstDecode::runStream()
@@ -253,6 +263,25 @@ bool GstDecode::gstBusProcessMsg(GstMessage *gstMsg)
     }
     return true;
 }
+
+void* GstDecode::gstGetFrameFunc(void* arg){
+    GstDecode* pStream = (GstDecode*)arg;
+
+    while (pStream->m_bEnable) {
+        cv::Mat frame;
+        pStream->getGstFrame(frame);
+
+        if (!frame.empty()) {
+            pthread_mutex_lock(&pStream->m_mtLock);
+            if (pStream->m_quFrame.size() < pStream->m_iMaxQueueSize) {
+                pStream->m_quFrame.push(frame); 
+            }
+            pthread_mutex_unlock(&pStream->m_mtLock);
+        }
+    }
+    return nullptr;
+}
+
 
 void* GstDecode::gstBusFunc(void* arg)
 {

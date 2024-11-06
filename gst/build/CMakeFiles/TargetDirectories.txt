@@ -1,6 +1,0 @@
-/home/dunggps/folder/gst/build/CMakeFiles/gst.dir
-/home/dunggps/folder/gst/build/CMakeFiles/test.dir
-/home/dunggps/folder/gst/build/CMakeFiles/stream.dir
-/home/dunggps/folder/gst/build/CMakeFiles/model.dir
-/home/dunggps/folder/gst/build/CMakeFiles/edit_cache.dir
-/home/dunggps/folder/gst/build/CMakeFiles/rebuild_cache.dir
