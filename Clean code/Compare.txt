@@ -1,0 +1,56 @@
+1. Class Structure & Design
+* CODE ANH QUANG:
+GstDecode phương thức và thuộc tính, handling RTSP, tạo và kiểm soát pipeline, sử dụng đa luồng. 
+pipeline dựa trên nhiều cái constructor khác nhau. Có 3 stream: run, pause, stop. có gstBusFunc, gstStreamFunc để cung cấp thời gian thực.
+Có queue để lấy frames, hệ thống lock sử dụng pthread_mutex
+* CODE TOI:
+Basic, chưa có architect, chưa khóa, chưa đầy đủ lắm ở mã khóa
+
+2. Error handling and logging
+* CODE ANH QUANG:
+sử dụng logging INFO, ERRORS với thông tin chi tiết
+sử dụng strCodec trống hoặc nếu luồng tạo ra hoàn thiện
+* CODE TOI:
+sử dụng std::cer
+
+3. Threading and Concurrency
+* CODE AQ:
+pthread để quản lý luồng với bus và stream. Đảm bảo decoding video không bị lock và kiểm soát frame
+gstBusFunc và gstStreamFunc chạy với luồng khác nhau, cho phép video streaming
+pthread_mutex_lick có flag m_bRun, m_bEnable
+* CODE t:
+ko có threading. sử dụng gst_app_sink và tín hiệu new-sample. luồng đơn, ko có locking và cơ chế đồng thời
+
+4. Pipeline Creation and Configuration:
+* Code AQ:
+phương thức makepipeline cơ động hơn, có thể check và điều chỉnh được nhiều
+luồng tạo được những string đặc trung với hàm genpileline và build pipeline dựa trên h264
+* Code t:
+pipeline được setup giống với code với elements: rtspsrc, decodebin, queue, appsink.
+ko cơ động và cấu hình đơn giản
+
+5. Signal handling:
+* Code AQ:
+không có handling hoặc callback cho new-sample, dựa vào đa luồng và luồng handle frame data
+* Code t:
+sử dụng g_signal_connect để connect với new-sample và hàm trả về. Tín hiệu được lấy từ appsink
+
+6. Frame processing:
+* Code AQ:
+frame được tiến trình và đưa vào queue, được handle. 
+Sử dụng OpenCV để conver object pixel
+* Code t:
+sử dụng appsink, nhưng frames được lấy chưa hoàn thiện, có hàm new-sample call back nhưng chưa hoàn thiện
+
+
+*** Cải thiện tốc độ:
+Giảm tải công việc I/O và tăng tính tuần tự: cân nhắc áp dụng bộ đệm hoặc queue không blocking. Điều này giúp tăng khả năng xử lý đồng thời của CPU và tránh thời gian chờ khi luồng xử lý đang bận.
+
+Áp dụng OpenCV cùng với tối ưu đa luồng: OpenCV cung cấp nhiều hàm đã được tối ưu cho đa luồng, giúp xử lý nhanh hơn trên CPU, đặc biệt khi chia nhỏ các tác vụ nặng như xử lý ảnh. Bạn có thể sử dụng OpenCV với cv::parallel_for_ hoặc std::async để quản lý đa luồng linh hoạt hơn.
+
+Giảm độ phân giải của khung hình (frame) nếu không cần thiết: Nếu xử lý của bạn có thể chịu được ảnh có độ phân giải thấp hơn, bạn có thể giảm kích thước ảnh trước khi xử lý. Điều này giúp tiết kiệm CPU cho cả quá trình decode và xử lý.
+
+Áp dụng kiến trúc producer-consumer cải tiến: Nếu bạn đang sử dụng Blocking Queue, hãy thử chuyển sang một kiến trúc producer-consumer không blocking để xử lý thông tin giữa các thread dễ dàng và tiết kiệm CPU hơn.
+
+Sử dụng thread pool: Thay vì tạo thread mới cho mỗi lần gọi xử lý, thread pool cho phép bạn tái sử dụng các thread sẵn có, giúp giảm tải công việc tạo và huỷ thread liên tục.
+
