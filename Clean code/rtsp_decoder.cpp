@@ -135,6 +135,26 @@ std::string GstDecode::genPileline(std::string strUrl)
 
 void GstDecode::makePipeline()
 {
+    std::string strPipe = genPileline(m_strUrl);
+    INFO("strPipe: {}", strPipe);
+    if (strPipe == "")
+    {
+        ERROR("genPileline fail! - {}", m_strUrl);
+        exit(0);
+    }
+
+    GstElement *source = gst_element_factory_make("rtspsrc", "source");
+    GstElement *decodebin = gst_element_factory_make("decodebin", "decodebin");
+    GstElement *tee = gst_element_factory_make("tee", "tee");
+    GstElement *queue1 = gst_element_factory_make("queue", "queue1");
+    GstElement *queue2 = gst_element_factory_make("queue", "queue2");
+    GstElement *sink = gst_element_factory_make("appsink", "sink");
+    GstElement *videosink = gst_element_factory_make("autovideosink", "videosink");
+
+    m_gstPipeline = gst_parse_launch(strPipe.c_str(), nullptr);
+
+    m_gstAppSink = GST_APP_SINK(gst_bin_add_many(GST_BIN(m_gstPipeline), source, decodebin, tee, queue1, sink, queue2, videosink, nullptr));
+    gst_element_set_state(m_gstPipeline, GST_STATE_PLAYING);
 }
 
 
@@ -259,4 +279,102 @@ void* GstDecode::gstStreamFunc(void* arg)
 
 void GstDecode::runStreamThread()
 {
+    while (true)
+    {
+        if (m_bEnable == false)
+            break;
+
+        if (m_bRun == false)
+            continue;
+
+        {
+            if (m_bRun == false)
+                continue;
+            
+            for (;;)
+            {
+                if (gst_app_sink_is_eos(GST_APP_SINK(m_gstAppSink)))
+                {
+                    std::cout << "EOS" << std::endl;
+                    // break;
+                    goto reconnect;
+                }
+
+                GstSample* gstSample = gst_app_sink_pull_sample(GST_APP_SINK(m_gstAppSink));
+                if (gstSample == nullptr)
+                {
+                    std::cout << "NO sample !" << std::endl;
+                    // break;
+                    goto reconnect;
+                }
+
+                GstCaps* gstCaps = gst_sample_get_caps(gstSample);
+
+                int iWidth = 0, iHeight = 0;
+                if (gstCaps)
+                {
+                    GstStructure* gstStructure = gst_caps_get_structure(gstCaps, 0);
+                    gst_structure_get_int(gstStructure, "width", &iWidth);
+                    gst_structure_get_int(gstStructure, "height", &iHeight);
+                }
+
+                m_gstBuffer = gst_sample_get_buffer(gstSample);
+                if (gst_buffer_map(m_gstBuffer, &m_gstMapInfo, GST_MAP_READ))
+                {
+                    const guint8* g_raw_data = m_gstMapInfo.data;
+                    const gchar* g_format_string = gst_structure_get_string(gst_caps_get_structure(gstCaps, 0), "format");
+                    std::string strPixelFormat(g_format_string ? g_format_string : "");
+                    // g_print("strPixelFormat: %s\n", strPixelFormat.c_str());
+                    cv::Mat mFrame;
+
+                    // mFrame = cv::Mat(iHeight, iWidth, CV_8UC3, const_cast<guint8*>(g_raw_data));
+
+                    if (strPixelFormat == "BGR")
+                    {
+                        mFrame = cv::Mat(iHeight, iWidth, CV_8UC3, const_cast<guint8*>(g_raw_data));
+                    }
+                    else if (strPixelFormat == "NV12")
+                    {
+                        cv::Mat mYUV(iHeight + iHeight / 2, iWidth, CV_8UC1, const_cast<guint8*>(g_raw_data));
+                        cv::cvtColor(mYUV, mFrame, cv::COLOR_YUV2BGR_NV12);
+                    }
+                    else if (strPixelFormat == "I420")
+                    {
+                        cv::Mat mYUV(iHeight + iHeight / 2, iWidth, CV_8UC1, const_cast<guint8*>(g_raw_data));
+                        cv::cvtColor(mYUV, mFrame, cv::COLOR_YUV2BGR_I420);
+                    }
+                    else
+                    {
+                        mFrame = cv::Mat(iHeight, iWidth, CV_8UC3, cv::Scalar(114, 114, 114));
+                    }
+
+                    cv::Mat mImage = mFrame.clone();
+                    if (mImage.empty() == false)
+                    {
+                        if (m_quFrame.getSize() < m_iMaxQueueSize)
+                            m_quFrame.push(mImage);
+                        else
+                        {
+                            cv::Mat mTemp;
+                            m_quFrame.tryWaitAndPop(mTemp, 50);
+                            m_quFrame.push(mImage);
+                        }
+                    }
+                    gst_buffer_unmap(m_gstBuffer, &m_gstMapInfo);
+                }
+                gst_sample_unref(gstSample);
+            }
+
+            reconnect:
+                INFO("-- Reconnect: {}", m_strUrl);
+                m_bRun = false;
+                sleep(5);
+                gst_element_set_state(m_gstPipeline, GST_STATE_NULL);
+                gst_object_unref(m_gstPipeline);
+                gst_object_unref(m_gstAppSink);
+                gst_object_unref(m_gstBus);
+                makePipeline();
+                m_bRun = true;
+        }
+    }
 }
