@@ -1,0 +1,8 @@
+1 ../common/images/face/S001-01-t10_01.ppm faceunknown ../common/images/face/S001-03-t10_01.ppm faceunknown ../common/images/face/S001-05-t10_01.ppm faceunknown ../common/images/face/S001-07-t10_01.ppm faceunknown ../common/images/face/S001-08-t10_02.ppm faceunknown ../common/images/face/S001-09-t10_01.ppm faceunknown
+21 ../common/images/face/S008-02-t10_01.ppm faceunknown ../common/images/face/S008-04-t10_01.ppm faceunknown ../common/images/face/S008-06-t10_01.ppm
+45 ../common/images/face/S023-01-t10_01.ppm faceunknown ../common/images/face/S023-03-t10_01.ppm faceunknown
+59 ../common/images/face/S030-01-t10_01.ppm faceunknown ../common/images/face/S030-03-t10_01.ppm faceunknown ../common/images/face/S030-05-t10_01.ppm faceunknown
+65 ../common/images/face/S031-02-t10_01.ppm faceunknown ../common/images/face/S031-04-t10_01.ppm faceunknown ../common/images/face/S031-06-t10_01.ppm faceunknown
+73 ../common/images/face/S033-01-t10_01.ppm faceunknown ../common/images/face/S033-03-t10_01.ppm faceunknown ../common/images/face/S033-05-t10_01.ppm faceunknown ../common/images/face/S033-07-t10_01.ppm faceunknown
+93 ../common/images/face/S044-02-t10_01.ppm faceunknown ../common/images/face/S044-04-t10_01.ppm faceunknown ../common/images/face/S044-06-t10_01.ppm faceunknown ../common/images/face/S044-08-t10_01.ppm faceunknown
+107 ../common/images/face/S048-02-t10_01.ppm faceunknown ../common/images/face/S048-04-t10_01.ppm faceunknown ../common/images/face/S048-06-t10_01.ppm faceunknown

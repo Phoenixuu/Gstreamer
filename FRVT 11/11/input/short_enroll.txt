@@ -1,0 +1,10 @@
+1 ../common/images/face/S001-01-t10_01.ppm facemugshot
+3 ../common/images/face/S001-03-t10_01.ppm facemugshot
+5 ../common/images/face/S001-05-t10_01.ppm facemugshot
+7 ../common/images/face/S001-07-t10_01.ppm facemugshot
+9 ../common/images/face/S001-08-t10_02.ppm facemugshot
+11 ../common/images/face/S001-09-t10_01.ppm facemugshot
+13 ../common/images/face/S003-01-t10_01.ppm facemugshot
+15 ../common/images/face/S005-01-t10_01.ppm facemugshot
+17 ../common/images/face/S006-02-t10_01.ppm facemugshot
+19 ../common/images/face/S007-01-t10_01.ppm facemugshot
